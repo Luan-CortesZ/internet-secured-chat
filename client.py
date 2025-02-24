@@ -9,10 +9,11 @@ client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #Connect client to server
 client.connect((server_ip, server_port))
 
+#Select message type
 
-message_type = input("Type of message \nt: Text message\ns: Server-only message\ni: Image message\n")
+def send_message():
+    message_type = input("Type of message \nt: Text message\ns: Server-only message\ni: Image message\n")
 
-while True:
     #Type of message
     msg = input("Enter message: ") #Message to send
     
@@ -25,4 +26,11 @@ while True:
 
     client.send(completeMsg)
 
-    
+def read_all_messages():
+    response = client.recv(1024).decode()
+    response = response[8:] # Prendre le tableau sans les 8 premiers caractères
+    response = response.replace('\x00', '')
+    print(f"Received {response}")
+
+while True:
+    read_all_messages()
