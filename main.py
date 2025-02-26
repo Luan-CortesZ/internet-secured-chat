@@ -9,6 +9,7 @@ HOST = os.getenv('HOST')
 PORT = int(os.getenv('PORT'))
 HEADER = b"ISC"
 TYPE_MAPPING = {'User' : 't', 'Server' : 's', 'Image' : 'i'}
+shift_server_demand = []
 
 last_sent_message = ""
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,7 +18,6 @@ client.connect((HOST, PORT))
 # Function to send message
 def send_message(event=None):
     global last_sent_message
-
     message_type = TYPE_MAPPING[client_window.get_type_value()] #Get message type
     msg = client_window.get_input_value() #Get user value
     
@@ -68,10 +68,29 @@ def receive_messages():
                 client_window.write_in_box("<User>", received_message)
             elif msg_type == 's':
                 client_window.write_in_box("<Server>", received_message)
+                if("task shift encode" in last_sent_message):
+                    shift_server_demand.append(received_message)
+                if(len(shift_server_demand) == 2):
+                    client_window.set_input_value(shift_decoder(shift_server_demand[1], shift_server_demand[0]), send_message)
+                    shift_server_demand.clear()
             elif msg_type == 'i':
                 client_window.write_in_box("<Image>", received_message)
         except:
             break
+
+def shift_decoder(text, shift):
+    i=len(shift)-1
+    while shift[i] != ' ':
+        i-=1
+    
+    shift = int(shift[i+1:])
+    decoded_text = ""
+
+    for char in text:
+        # Décale le caractère en s'assurant de ne pas dépasser la plage Unicode
+        decoded_text += chr(ord(char) + shift)
+
+    return decoded_text
 
 #Thread to hear message in background
 thread = threading.Thread(target=receive_messages, daemon=True)

@@ -26,6 +26,10 @@ send_button.pack(pady=5, side="left")
 def get_input_value():
     return input_text_field.get()
 
+def set_input_value(text, send_callback):
+    input_text_field.insert(0,text)
+    send_callback()
+
 def get_type_value():
     return input_type_field.get()
 
