@@ -1,7 +1,0 @@
-name: ISC_PROJ
-channels:
-- anaconda
-- conda-forge
-- defaults
-dependencies:
-- python=3.13.2
