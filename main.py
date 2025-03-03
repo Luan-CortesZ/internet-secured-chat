@@ -71,26 +71,28 @@ def receive_messages():
                 if("task shift encode" in last_sent_message):
                     shift_server_demand.append(received_message)
                 if(len(shift_server_demand) == 2):
-                    client_window.set_input_value(shift_decoder(shift_server_demand[1], shift_server_demand[0]), send_message)
+                    shift = shift_server_demand[0]
+
+                    i=len(shift)-1
+                    while shift[i] != ' ':
+                        i-=1
+                    
+                    shift = int(shift[i+1:])
+
+                    client_window.set_input_value(shift_encoder(shift_server_demand[1], shift), send_message)
                     shift_server_demand.clear()
             elif msg_type == 'i':
                 client_window.write_in_box("<Image>", received_message)
         except:
             break
 
-def shift_decoder(text, shift):
-    i=len(shift)-1
-    while shift[i] != ' ':
-        i-=1
-    
-    shift = int(shift[i+1:])
-    decoded_text = ""
+def shift_encoder(text, shift):
+    encoded_text = ""
 
     for char in text:
-        # Décale le caractère en s'assurant de ne pas dépasser la plage Unicode
-        decoded_text += chr(ord(char) + shift)
+        encoded_text += chr(ord(char) + shift)
 
-    return decoded_text
+    return encoded_text
 
 #Thread to hear message in background
 thread = threading.Thread(target=receive_messages, daemon=True)
