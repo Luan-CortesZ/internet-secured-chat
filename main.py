@@ -2,7 +2,9 @@ import socket
 import threading
 import os
 import client_window
+import cryptography_functions
 from dotenv import load_dotenv
+
 load_dotenv()
 
 HOST = os.getenv('HOST')
@@ -71,28 +73,22 @@ def receive_messages():
                 if("task shift encode" in last_sent_message):
                     shift_server_demand.append(received_message)
                 if(len(shift_server_demand) == 2):
-                    shift = shift_server_demand[0]
-
-                    i=len(shift)-1
-                    while shift[i] != ' ':
-                        i-=1
-                    
-                    shift = int(shift[i+1:])
-
-                    client_window.set_input_value(shift_encoder(shift_server_demand[1], shift), send_message)
+                    shift = get_shift(shift_server_demand[0])
+                    text_to_shift = shift_server_demand[1]
+                    client_window.set_input_value(cryptography_functions.shift_encoder(text_to_shift, shift), send_message)
                     shift_server_demand.clear()
             elif msg_type == 'i':
                 client_window.write_in_box("<Image>", received_message)
         except:
             break
 
-def shift_encoder(text, shift):
-    encoded_text = ""
-
-    for char in text:
-        encoded_text += chr(ord(char) + shift)
-
-    return encoded_text
+def get_shift(server_shift):
+    shift = ""
+    i=len(server_shift)-1
+    while server_shift[i] != ' ':
+        i-=1
+        shift = int(server_shift[i+1:])
+    return shift
 
 #Thread to hear message in background
 thread = threading.Thread(target=receive_messages, daemon=True)
