@@ -127,11 +127,8 @@ def get_server_shift(server_shift):
     """
     Get server shift sent 
     """
-    shift = ""
-    i=len(server_shift)-1
-    while server_shift[i] != ' ':
-        i-=1
-    shift = server_shift[i+1:]
+    shift = server_shift.split("shift-key ")[1]
+    print(shift)
     return shift
 
 #Thread to hear message in background
