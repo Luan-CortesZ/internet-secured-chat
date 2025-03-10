@@ -64,19 +64,25 @@ def receive_messages():
             
             #Do specific code by message type
             match msg_type:
-                case 't':
+                case 't': #User message
                     client_window.write_in_box("<User>", received_message)
-                case 'i':
+                case 'i': #Image message
                     client_window.write_in_box("<Image>", received_message)
-                case 's':
+                case 's': #Server message
                     client_window.write_in_box("<Server>", received_message)
                     if("task shift encode" in last_sent_message):
                         shift_server_demand.append(received_message)
                         if(len(shift_server_demand) == 2):
-                            shift = get_server_shift(shift_server_demand[0])
+                            shift = int(get_server_shift(shift_server_demand[0]))
                             text_to_shift = shift_server_demand[1]
                             client_window.set_input_value(cryptography_functions.shift_encoder(text_to_shift, shift))
                             shift_server_demand.clear()
+                    if("task vigenere encode" in last_sent_message):
+                        shift_server_demand.append(received_message)
+                        if(len(shift_server_demand) == 2):
+                            shift = get_server_shift(shift_server_demand[0])
+                            text_to_shift = shift_server_demand[1]
+                            client_window.set_input_value(cryptography_functions.encrypt_vigenere(text_to_shift, shift))
                 case _:
                     ""
         except:
@@ -125,7 +131,7 @@ def get_server_shift(server_shift):
     i=len(server_shift)-1
     while server_shift[i] != ' ':
         i-=1
-        shift = int(server_shift[i+1:])
+    shift = server_shift[i+1:]
     return shift
 
 #Thread to hear message in background
