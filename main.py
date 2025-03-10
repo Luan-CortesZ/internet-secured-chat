@@ -70,24 +70,19 @@ def receive_messages():
                     client_window.write_in_box("<Image>", received_message)
                 case 's': #Server message
                     client_window.write_in_box("<Server>", received_message)
-                    if("task shift encode" in last_sent_message):
+                    if("task" in last_sent_message):
                         shift_server_demand.append(received_message)
                         if(len(shift_server_demand) == 2):
-                            shift = int(get_server_shift(shift_server_demand[0]))
-                            text_to_shift = shift_server_demand[1]
-                            client_window.set_input_value(cryptography_functions.shift_encoder(text_to_shift, shift))
-                            shift_server_demand.clear()
-                    if("task vigenere encode" in last_sent_message):
-                        shift_server_demand.append(received_message)
-                        if(len(shift_server_demand) == 2):
-                            shift = get_server_shift(shift_server_demand[0])
-                            text_to_shift = shift_server_demand[1]
-                            client_window.set_input_value(cryptography_functions.encrypt_vigenere(text_to_shift, shift))
-                    if("task RSA encode" in last_sent_message):
-                        shift_server_demand.append(received_message)
-                        if(len(shift_server_demand) == 2):
-                            shift = get_server_rsa_infos(shift_server_demand[0])
-                            text_to_shift = shift_server_demand[1]
+                            text_to_encode = shift_server_demand[1]
+                            if("shift" in last_sent_message):
+                                shift = int(get_server_shift(shift_server_demand[0]))
+                                client_window.set_input_value(cryptography_functions.shift_encoder(text_to_encode, shift))
+                            if("vigenere" in last_sent_message):
+                                shift = get_server_shift(shift_server_demand[0])
+                                client_window.set_input_value(cryptography_functions.encrypt_vigenere(text_to_encode, shift))
+                            if("RSA" in last_sent_message):
+                                (n,e) = get_server_rsa_infos(shift_server_demand[0])
+
                 case _:
                     ""
         except:
@@ -133,7 +128,6 @@ def get_server_shift(server_shift):
     Get server shift sent 
     """
     shift = server_shift.split("shift-key ")[1]
-    print(shift)
     return shift
 
 def get_server_rsa_infos(server_rsa):
