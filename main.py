@@ -83,6 +83,11 @@ def receive_messages():
                             shift = get_server_shift(shift_server_demand[0])
                             text_to_shift = shift_server_demand[1]
                             client_window.set_input_value(cryptography_functions.encrypt_vigenere(text_to_shift, shift))
+                    if("task RSA encode" in last_sent_message):
+                        shift_server_demand.append(received_message)
+                        if(len(shift_server_demand) == 2):
+                            shift = get_server_rsa_infos(shift_server_demand[0])
+                            text_to_shift = shift_server_demand[1]
                 case _:
                     ""
         except:
@@ -130,6 +135,17 @@ def get_server_shift(server_shift):
     shift = server_shift.split("shift-key ")[1]
     print(shift)
     return shift
+
+def get_server_rsa_infos(server_rsa):
+    """
+    Get server rsa informations
+
+    return n and e
+    """
+    infos = server_rsa.split(", e=")
+    e = int(infos[1])
+    n = int(infos[0].split("n=")[1])
+    return (e,n)
 
 #Thread to hear message in background
 thread = threading.Thread(target=receive_messages, daemon=True)
