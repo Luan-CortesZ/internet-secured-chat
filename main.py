@@ -82,6 +82,9 @@ def receive_messages():
                                 client_window.set_input_value(cryptography_functions.encrypt_vigenere(text_to_encode, shift))
                             if("RSA" in last_sent_message):
                                 (n,e) = get_server_rsa_infos(shift_server_demand[0])
+                                message_numbers = cryptography_functions.numConversion(text_to_encode) # numerical conversion of message
+                                encrypted_numbers = [cryptography_functions.encrypt(num, e, n) for num in message_numbers] # to encrypt each number
+                                client_window.set_input_value(" ".join(encrypted_numbers))
 
                 case _:
                     ""

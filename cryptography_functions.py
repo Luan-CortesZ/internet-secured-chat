@@ -86,9 +86,10 @@ def power(base, expo, m): # to compute modular exponentiation
             res = (res * base) % m
         base = (base * base) % m #square the base
         expo = expo // 2 #reduce expponent by half
-    return res 
+    return str(res) 
 
-def modInverse(e,phi): #find modular inverse of e % phi(n)
+def modInverse(e,n): #find modular inverse of e % phi(n)
+    phi = euler_totient(n)
     for d in range(2,phi):
         if (e*d)% phi == 1:
             return d
@@ -132,12 +133,6 @@ def euler_totient(n):  # Function to compute Euler's Totient Function (φ(n))
         raise ValueError("n must be a product of exactly two distinct primes")
 
     
-n = 1425646933
-phi =   euler_totient(n)
-e = 7014323
-d = modInverse(e,phi)
-
-
 # Encrypt message using public key (e, n)
 def encrypt(msg, e, n):
     return power(msg, e, n)
