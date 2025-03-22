@@ -7,52 +7,44 @@ def shift_encoder(text, shift):
     text => text to encode
     shift => gap to encode each letters
     """
-    encoded_text = ""
+    encoded_text = bytearray()
 
     for char in text:
-        encoded_text += chr(ord(char) + shift)
-
+        encoded_text.extend(int.to_bytes(int.from_bytes(char.encode()) + shift, 4))
+        
     return encoded_text
 #endregion
 
-#region Vigenere Encoding
-def generate_key (msg, key):
+def generate_key(msg, key):
     """
-    Generate Vigenere key to have same length than message
-    msg => message to encrypt
-    key => Key used to encrypt
-
-    return key repeated to have same length than message
+    Génère une clé de la même longueur que le message en répétant la clé initiale.
     """
-
-    key = list(key)
-    if len(msg) == len(key):
-        return key
-    else: # Extend the key by repeating characters cyclically
-        for i in range (len(msg) - len(key)):
-            key.append(key[i % len(key)])
-        return "".join(key)   
+    key = (key * (len(msg) // len(key) + 1))[:len(msg)]
+    return key
 
 def encrypt_vigenere(msg, key):
     """
-    Encrypt message in Vigenere algorithm
-    msg => message to encrypt
-    key => Key used to encrypt message
+    Chiffre un message avec l'algorithme de Vigenère.
+    - msg : Texte à chiffrer
+    - key : Clé de chiffrement
 
-    return encrypted message in vigenere
+    Retourne : Message chiffré
     """
     encrypted_text = []
-    key = generate_key(msg, key) # Ensure key length matches message length
-    for i in range(len(msg)):
-        char = msg[i]
-        if char.isupper(): # Encrypt uppercase letters
-            encrypted_char = chr((ord(char) + ord(key[i]) - 2 * ord('A')) % 26 + ord('A'))
-        elif char.islower(): # Encrypt lowercase letters
-            encrypted_char = chr((ord(char) + ord(key[i]) - 2 * ord('a')) % 26 + ord('a'))
-        else: # Keep non-alphabetic characters unchanged
+    key = generate_key(msg, key)  # Génère une clé de la même longueur que le message
+    
+    for i, char in enumerate(msg):
+        if char.isupper():  # Lettres majuscules
+            encrypted_char = chr((ord(char) - ord('A') + (ord(key[i]) - ord('A'))) % 26 + ord('A'))
+        elif char.islower():  # Lettres minuscules
+            encrypted_char = chr((ord(char) - ord('a') + (ord(key[i]) - ord('a'))) % 26 + ord('a'))
+        else:  # Caractères non alphabétiques (on les garde inchangés)
             encrypted_char = char
+        
         encrypted_text.append(encrypted_char)
-    return "".join(encrypted_text) # Convert list to string and return
+
+    return "".join(encrypted_text)
+
 
 def decrypt_vigenere(msg,key):
     """

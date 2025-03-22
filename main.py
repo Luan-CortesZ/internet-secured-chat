@@ -1,152 +1,171 @@
-import socket
-import threading
 import os
-import client_window
-import cryptography_functions
+import sys                                  # For system-level operations and command line arguments
+import socket                               # For network communication
+import threading                            # For concurrent execution
+from PySide6.QtWidgets import QApplication, QWidget  # Core PySide6 widgets
+from PySide6.QtUiTools import QUiLoader  
 from dotenv import load_dotenv
+import cryptography.functions as functions
+import server as server
 
 load_dotenv() #Load environment variables
 
 #Get server configuration from env file
 HOST = os.getenv('HOST')
 PORT = int(os.getenv('PORT'))
+last_sent_message = ""
+shift_server_demand = []
 
-HEADER = b"ISC" #Message header is always starting by "ISC"
-TYPE_MAPPING = {'User' : 't', 'Server' : 's', 'Image' : 'i'} #Dictionnary to map user choice and message value
-shift_server_demand = [] #Array that contain shift demand
-last_sent_message = "" #Keep last message sent by user
-
-#Create client socket and connect to server
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect((HOST, PORT))
-
-# Function to send message
-def send_message(event=None):
+class ChatClient(QWidget):
     """
-    Send message to server
+    A PySide6-based chat client that connects to a server and allows
+    sending/receiving messages through a graphical interface.
     """
+    def __init__(self, host=HOST, port=PORT):
+        """
+        Initialize the chat client with server connection details.
+        
+        Args:
+            host (str): Server hostname or IP address (default: localhost)
+            port (int): Server port number (default: 12345)
+        """
+        super(ChatClient, self).__init__()  # Initialize parent QWidget class
+        loader = QUiLoader()                # Create a QUiLoader instance
+        self.ui = loader.load('./src/views/ISC_GUI.ui', self)  # Load the UI design from file
+        self.setWindowTitle('103.2 - Internet Secured Chat')     # Set window title
+        self.ui.btnSend.clicked.connect(lambda: self.send_message())  # Connect button click to send_message method
+        self.ui.btnShift.clicked.connect(self.test_shift_encoder)
+        self.ui.btnVigenere.clicked.connect(self.test_vigenere_encoder)
+        self.ui.btnRSA.clicked.connect(self.test_rsa_encoder)
+        self.ui.userMessage.setText("/")
+        self.socket = socket.socket()       # Create a new socket object for server communication
+        self.connect_to_server(host, port)  # Establish connection to the server
 
-    global last_sent_message #Allow to change last_sent_message var
-    message_type = TYPE_MAPPING[client_window.get_type_value()] #Get message type
-    user_message = client_window.get_input_value() #Get user value
+    def connect_to_server(self, host, port):
+        """
+        Attempt to connect to the chat server.
+        
+        Args:
+            host (str): Server hostname or IP address
+            port (int): Server port number
+        """
+        try:
+            self.socket.connect((host, port))  # Connect to server using provided host and port
+        except socket.error as e:
+            print(f"Error connecting to server: {e}")  # Print error message if connection fails
+            self.close()  # Close the application window
     
-    #Verify if msg is set
-    if user_message:
-        #Message to send with type and length
-        user_message_encoded = HEADER + ord(message_type).to_bytes(1) + len(user_message).to_bytes(2, 'big')
+    def send_message(self, type="", message=""):
+        """
+        Send the message entered by the user to the server and prepare to receive a response.
+        """
+        global last_sent_message
 
-        #Add each message character encoded in 4 bytes
-        for char in user_message:
-            user_message_encoded += ord(char).to_bytes(4, 'big')
+        type = type or self.ui.userMessage.text()[1]
+        message = message or self.ui.userMessage.text()[3:]
+            
+        self.ui.userMessage.setText(f"/{type}")
+
+
+        text_to_show = message if isinstance(message, str) else message.rstrip(b'\x00').decode('utf-8', 'replace')
+        self.ui.receivedMessage.append(f'<You> {text_to_show}')  # Display user's message in the chat area
 
         #Send message to server
-        client.send(user_message_encoded)
+        self.socket.send(server.isc_encode(type, message))
+        last_sent_message = text_to_show
 
-        #Write my message only if sent to server
-        if(message_type == 's'):
-            client_window.write_in_box("<Me>", user_message)
-        #Reset window field
-        client_window.reset_field()
+    def receive_message(self):
+        """Réception et affichage des messages du serveur."""
+        global last_sent_message
+        global shift_server_demand
 
-        #Save last sent message
-        last_sent_message = user_message
-
-def receive_messages():
-    """
-    Function to receive messages sent by other user or server
-    """
-    while True:
         try:
-            
-            (raw_message,msg_type) = get_server_message() #Get server message
+            raw_message, msg_type = self.get_server_message()
+            received_message = server.decode_server_message(raw_message)
 
-            received_message = decode_server_message(raw_message) #Decode server message to make it readable
-            
-            #Do specific code by message type
-            match msg_type:
-                case 't': #User message
-                    client_window.write_in_box("<User>", received_message)
-                case 'i': #Image message
-                    client_window.write_in_box("<Image>", received_message)
-                case 's': #Server message
-                    client_window.write_in_box("<Server>", received_message)
-                    if("task" in last_sent_message):
-                        shift_server_demand.append(received_message)
-                        if(len(shift_server_demand) == 2):
-                            text_to_encode = shift_server_demand[1]
-                            if("shift" in last_sent_message):
-                                shift = int(get_server_shift(shift_server_demand[0]))
-                                client_window.set_input_value(cryptography_functions.shift_encoder(text_to_encode, shift))
-                            if("vigenere" in last_sent_message):
-                                shift = get_server_shift(shift_server_demand[0])
-                                client_window.set_input_value(cryptography_functions.encrypt_vigenere(text_to_encode, shift))
-                            if("RSA" in last_sent_message):
-                                (n,e) = get_server_rsa_infos(shift_server_demand[0])
-                                message_numbers = cryptography_functions.numConversion(text_to_encode) # numerical conversion of message
-                                encrypted_numbers = [cryptography_functions.encrypt(num, e, n) for num in message_numbers] # to encrypt each number
-                                client_window.set_input_value(" ".join(encrypted_numbers))
-
-                case _:
-                    ""
-        except:
-            break
+            if msg_type == 't' and received_message != last_sent_message:
+                self.ui.receivedMessage.append(f'<User> {received_message}')
+            elif msg_type == 'i':
+                self.ui.receivedMessage.append(f'<Image> {received_message}')
+            elif msg_type == 's':
+                self.ui.receivedMessage.append(f'<Server> {received_message}')
+                if("task" in last_sent_message):
+                    shift_server_demand.append(received_message)
+                    if len(shift_server_demand) == 2:
+                        encoding_text = server.handle_server_task(received_message, last_sent_message, shift_server_demand) 
+                        self.send_message("s", encoding_text)
+                        shift_server_demand.clear()
+        
+        except (socket.error, ValueError) as e:
+            print(f"Erreur réception : {e}")
     
-def decode_server_message(raw_message):
-    """
-    Decode server message set in parameter
-    """
-    #Decode message
-    received_message = ""
-    for i in range(0, len(raw_message), 4):
-        char_data = raw_message[i:i+4] #Read char by char
-        received_message += char_data.decode("utf-8", errors="ignore").strip('\x00') #Delete empty char
-    return received_message
+    def receive_messages_loop(self):
+        """
+        Loop to continuously receive messages from the server.
+        """
+        while True:
+            try:
+                self.receive_message()
+            except (socket.error, ConnectionResetError):
+                print("Connexion interrompue par le serveur.")
+                break
 
-def get_server_message():
-    """
-    Get server message
+    def get_server_message(self):
+        """
+        Get server message
 
-    Return raw_message and message type 't', 's', 'i'
-    """
+        Return raw_message and message type 't', 's', 'i'
+        """
 
-    #Get message Header 
-    #3 first bytes for "ISC"
-    #4th byte for the message type 't', 's', 'i'
-    #5th and 6th bytes for the message length
-    receivedHeader = client.recv(6)
+        #Get message Header 
+        #3 first bytes for "ISC"
+        #4th byte for the message type 't', 's', 'i'
+        #5th and 6th bytes for the message length
+        receivedHeader = self.socket.recv(6)
+        
+        #Get message type (3rd byte) and decode
+        msg_type = receivedHeader[3:4].decode()
+
+        #Get message length (4th and 5th bytes) and decode
+        msg_size = int.from_bytes(receivedHeader[4:6], 'big')
+
+        #Read rest of the message by his size calculate by msg_size * 4
+        raw_data = self.socket.recv(msg_size * 4)
+
+        return (raw_data,msg_type)
+
+    def test_shift_encoder(self):
+        message = "task shift encode 10"
+        self.send_message("s", message)
+
+    def test_vigenere_encoder(self):
+        message = "task vigenere encode 10"
+        self.send_message("s", message)
+
+    def test_rsa_encoder(self):
+        message = "task RSA encode 10"
+        self.send_message("s", message)
+
+def closeEvent(self, event):
+    """
+    Handle the window close event by properly closing the socket connection.
     
-    #Get message type (3rd byte) and decode
-    msg_type = receivedHeader[3:4].decode()
-
-    #Get message length (4th and 5th bytes) and decode
-    msg_size = int.from_bytes(receivedHeader[4:6], 'big')
-
-    #Read rest of the message by his size calculate by msg_size * 4
-    raw_data = client.recv(msg_size * 4)
-
-    return (raw_data,msg_type)
-
-def get_server_shift(server_shift):
+    Args:
+        event: The close event object
     """
-    Get server shift sent 
+    self.socket.close()  # Close the socket connection
+    event.accept()       # Accept the close event
+
+def main():
     """
-    shift = server_shift.split("shift-key ")[1]
-    return shift
-
-def get_server_rsa_infos(server_rsa):
+    Main function to initialize and run the chat client application.
     """
-    Get server rsa informations
+    app = QApplication(sys.argv)  # Create a new PySide6 application
+    client = ChatClient()         # Create an instance of the chat client
+    client.show()                 # Display the client window
+    threading.Thread(target=client.receive_messages_loop, daemon=True).start()  # Start a new thread to receive response (prevents UI from freezing)
+    sys.exit(app.exec())          # Start the application event loop
 
-    return n and e
-    """
-    infos = server_rsa.split(", e=")
-    e = int(infos[1])
-    n = int(infos[0].split("n=")[1])
-    return (e,n)
+if __name__ == "__main__":
+    main()  # Run the main function when script is executed directly
 
-#Thread to hear message in background
-thread = threading.Thread(target=receive_messages, daemon=True)
-thread.start()
-
-#Show window
-client_window.show_window(send_message)
