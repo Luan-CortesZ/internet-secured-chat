@@ -70,7 +70,7 @@ class ChatClient(QWidget):
         self.ui.receivedMessage.append(server.construct_message_to_show("You", text_to_show))  # Display user's message in the chat area
 
         #Send message to server
-        self.socket.send(server.isc_encode(type, message))
+        self.socket.sendall(server.isc_encode(type, message))
         last_sent_message = text_to_show
 
     def receive_message(self):
