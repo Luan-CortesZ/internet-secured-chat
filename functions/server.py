@@ -1,6 +1,7 @@
-from cryptography import functions
+from datetime import datetime
+import functions.cryptography as cryptography
 
-def handle_server_task(received_message, last_sent_message, shift_server_demand):
+def handle_server_task(last_sent_message, shift_server_demand):
     """Traite les messages du serveur nécessitant une action spécifique."""
     
     if len(shift_server_demand) == 2:
@@ -9,14 +10,13 @@ def handle_server_task(received_message, last_sent_message, shift_server_demand)
 
         if task_type == "shift":
             shift = int(get_server_shift(shift_server_demand[0]))
-            encoding_text = functions.shift_encoder(text_to_encode, shift)
+            encoding_text = cryptography.encrypt_shift(text_to_encode, shift)
         elif task_type == "vigenere":
             key = get_server_shift(shift_server_demand[0])
-            encoding_text = functions.encrypt_vigenere(text_to_encode, key)
+            encoding_text = cryptography.encrypt_vigenere(text_to_encode, key)
         elif task_type == "RSA":
             n, e = get_server_rsa_infos(shift_server_demand[0])
-            message_numbers = functions.numConversion(text_to_encode)
-            encoding_text = [functions.encrypt(num, e, n) for num in message_numbers]
+            encoding_text = cryptography.encrypt_rsa(e, n, text_to_encode)
         shift_server_demand.clear()
         return encoding_text
 
@@ -35,6 +35,15 @@ def isc_encode(type, message):
         msg_length = len(message_bytes) // 4 
 
         return b"ISC" + type.encode("utf-8") + int(msg_length).to_bytes(2, 'big') + message_bytes
+
+def construct_message_to_show(who, message):
+    return f'[{message_sending_time()}] <{who}> {message}'
+
+def message_sending_time():
+    """
+    Retourne l'heure et la minute actuelles sous le format 'HH:MM'.
+    """
+    return datetime.now().strftime("%H:%M")
 
 def get_server_shift(server_shift):
     """

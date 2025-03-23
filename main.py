@@ -5,8 +5,7 @@ import threading                            # For concurrent execution
 from PySide6.QtWidgets import QApplication, QWidget  # Core PySide6 widgets
 from PySide6.QtUiTools import QUiLoader  
 from dotenv import load_dotenv
-import cryptography.functions as functions
-import server as server
+import functions.server as server
 
 load_dotenv() #Load environment variables
 
@@ -38,6 +37,7 @@ class ChatClient(QWidget):
         self.ui.btnVigenere.clicked.connect(self.test_vigenere_encoder)
         self.ui.btnRSA.clicked.connect(self.test_rsa_encoder)
         self.ui.userMessage.setText("/")
+        self.ui.userMessage.returnPressed.connect(self.send_message)
         self.socket = socket.socket()       # Create a new socket object for server communication
         self.connect_to_server(host, port)  # Establish connection to the server
 
@@ -66,9 +66,8 @@ class ChatClient(QWidget):
             
         self.ui.userMessage.setText(f"/{type}")
 
-
-        text_to_show = message if isinstance(message, str) else message.rstrip(b'\x00').decode('utf-8', 'replace')
-        self.ui.receivedMessage.append(f'<You> {text_to_show}')  # Display user's message in the chat area
+        text_to_show = message if isinstance(message, str) else bytes(byte for byte in message if byte != 0).decode('utf-8', 'replace')
+        self.ui.receivedMessage.append(server.construct_message_to_show("You", text_to_show))  # Display user's message in the chat area
 
         #Send message to server
         self.socket.send(server.isc_encode(type, message))
@@ -84,15 +83,15 @@ class ChatClient(QWidget):
             received_message = server.decode_server_message(raw_message)
 
             if msg_type == 't' and received_message != last_sent_message:
-                self.ui.receivedMessage.append(f'<User> {received_message}')
+                self.ui.receivedMessage.append(server.construct_message_to_show("User", received_message))
             elif msg_type == 'i':
-                self.ui.receivedMessage.append(f'<Image> {received_message}')
+                self.ui.receivedMessage.append(server.construct_message_to_show("Image", received_message))
             elif msg_type == 's':
-                self.ui.receivedMessage.append(f'<Server> {received_message}')
+                self.ui.receivedMessage.append(server.construct_message_to_show("Server", received_message))
                 if("task" in last_sent_message):
                     shift_server_demand.append(received_message)
                     if len(shift_server_demand) == 2:
-                        encoding_text = server.handle_server_task(received_message, last_sent_message, shift_server_demand) 
+                        encoding_text = server.handle_server_task(last_sent_message, shift_server_demand) 
                         self.send_message("s", encoding_text)
                         shift_server_demand.clear()
         
