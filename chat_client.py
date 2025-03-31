@@ -167,14 +167,13 @@ class ChatClient(QWidget):
 
         get_message = True
 
-    def get_n_server_message(self, n, show):
+    def get_n_server_message(self, n, show=True):
         demand = []
         for i in range(n):
             raw_message, msg_type = self.get_server_message() # Get server message and type of message
             received_message = server.decode_server_message(raw_message) # decode message to make it readable
             demand.append(received_message)# Add server demand
             if show: self.ui.receivedMessage.append(server.construct_message_to_show("Server", received_message))
-        print(demand)
         return demand
 
     def test_shift_encoder(self):
