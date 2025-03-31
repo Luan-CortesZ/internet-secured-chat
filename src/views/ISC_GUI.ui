@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>635</width>
+    <width>712</width>
     <height>420</height>
    </rect>
   </property>
@@ -70,7 +70,7 @@
      <rect>
       <x>550</x>
       <y>30</y>
-      <width>101</width>
+      <width>161</width>
       <height>81</height>
      </rect>
     </property>
@@ -140,7 +140,7 @@
      <rect>
       <x>540</x>
       <y>120</y>
-      <width>111</width>
+      <width>181</width>
       <height>31</height>
      </rect>
     </property>
@@ -153,7 +153,7 @@
      <rect>
       <x>540</x>
       <y>160</y>
-      <width>111</width>
+      <width>181</width>
       <height>31</height>
      </rect>
     </property>
@@ -166,12 +166,38 @@
      <rect>
       <x>540</x>
       <y>200</y>
-      <width>111</width>
+      <width>181</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
      <string>RSA encode</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnHashHash">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>240</y>
+      <width>91</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Hash : Hash</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnHashVerify">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>240</y>
+      <width>91</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Hash : Verify</string>
     </property>
    </widget>
    <zorder>receivedMessage</zorder>
@@ -182,6 +208,8 @@
    <zorder>btnShift</zorder>
    <zorder>btnVigenere</zorder>
    <zorder>btnRSA</zorder>
+   <zorder>btnHashHash</zorder>
+   <zorder>btnHashVerify</zorder>
   </widget>
  </widget>
  <resources/>
