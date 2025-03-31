@@ -2,14 +2,11 @@ import os
 import socket                               # For network communication
 from PySide6.QtWidgets import QApplication, QWidget  # Core PySide6 widgets
 from PySide6.QtUiTools import QUiLoader  
-from dotenv import load_dotenv
 import functions.server as server
 
-load_dotenv() #Load environment variables
-
 #Get server configuration from env file
-HOST = os.getenv('HOST')
-PORT = int(os.getenv('PORT'))
+HOST = "vlbelintrocrypto.hevs.ch"
+PORT = 6000
 last_sent_message = "" #Initialize var to keep last sending message from the user
 server_demand = [] #Initialize array to get server encoding demand
 
