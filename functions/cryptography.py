@@ -1,3 +1,5 @@
+import hashlib
+
 #region Shift encoding
 def encrypt_shift(text, shift):
     """
@@ -72,3 +74,7 @@ def encrypt_rsa(n, e, msg):
                 pow(int.from_bytes(char.encode()), int(e), int(n)), 4))
 
     return result
+
+def hash_message(msg):
+    hashed = hashlib.sha256(msg.encode()).hexdigest()
+    return hashed

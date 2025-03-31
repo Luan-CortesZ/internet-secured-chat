@@ -3,11 +3,9 @@ import functions.cryptography as cryptography
 
 def handle_server_task(last_sent_message, server_demand):
     """Traite les messages du serveur nécessitant une action spécifique."""
-    
+    text_to_encode = server_demand[1]
+    task_type = last_sent_message.split()[1]
     if len(server_demand) == 2:
-        text_to_encode = server_demand[1]
-        task_type = last_sent_message.split()[1]
-
         if task_type == "shift":
             shift = int(get_server_shift(server_demand[0]))
             encoding_text = cryptography.encrypt_shift(text_to_encode, shift)
@@ -17,8 +15,15 @@ def handle_server_task(last_sent_message, server_demand):
         elif task_type == "RSA":
             n, e = get_server_rsa_infos(server_demand[0])
             encoding_text = cryptography.encrypt_rsa(e, n, text_to_encode)
-        server_demand.clear()
-        return encoding_text
+        elif task_type == "hash":
+            encoding_text = cryptography.hash_message(text_to_encode)
+    elif len(server_demand) == 3:
+        if server_demand[2] == cryptography.hash_message(text_to_encode):
+            encoding_text = "true"
+        else:
+            encoding_text = "false"
+    server_demand.clear()
+    return encoding_text
 
 def isc_encode(type, message):
     if message:

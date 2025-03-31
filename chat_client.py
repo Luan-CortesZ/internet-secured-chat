@@ -9,6 +9,7 @@ HOST = "vlbelintrocrypto.hevs.ch"
 PORT = 6000
 last_sent_message = "" #Initialize var to keep last sending message from the user
 server_demand = [] #Initialize array to get server encoding demand
+get_message = True
 
 class ChatClient(QWidget):
     """
@@ -79,6 +80,7 @@ class ChatClient(QWidget):
         """Display received message in textbox"""
         global last_sent_message # Global so user can update 
         global server_demand # Global so user can update
+        global get_message # Global so user can update
 
         try:
             # Vérifier si le socket est encore valide avant de recevoir un message
@@ -100,12 +102,26 @@ class ChatClient(QWidget):
                 self.ui.receivedMessage.append(server.construct_message_to_show("Server", received_message))
                 #If there is a task to do
                 if("task" in last_sent_message):
+                    get_message = False
                     server_demand.append(received_message)# Add server demand
-                    #If there are 2 demand in array, do the specific task
-                    if len(server_demand) == 2:
-                        encoding_text = server.handle_server_task(last_sent_message, server_demand) #Get encoding text from specific task
-                        self.send_message("s", encoding_text) # send to server
-                        server_demand.clear() # Clear array so we can encode again
+
+                    n_server_message = 1
+                    hash_Type = last_sent_message.split()[2]
+
+                    if hash_Type == "verify":
+                        n_server_message = 2
+                    
+                    for i in range(n_server_message):
+                        raw_message, msg_type = self.get_server_message() # Get server message and type of message
+                        received_message = server.decode_server_message(raw_message) # decode message to make it readable
+                        self.ui.receivedMessage.append(server.construct_message_to_show("Server", received_message))
+                        server_demand.append(received_message)# Add server demand
+
+                    encoding_text = server.handle_server_task(last_sent_message, server_demand) #Get encoding text from specific task
+                    self.send_message("s", encoding_text) # send to server
+                    server_demand.clear() # Clear array so we can encode again
+
+                    get_message = True
         
         except (socket.error, ValueError) as e:
             print(f"Erreur réception : {e}")
@@ -114,7 +130,9 @@ class ChatClient(QWidget):
         """
         Loop to continuously display messages from the server.
         """
-        while self.socket:
+        global get_message # Global so user can update
+
+        while self.socket and get_message:
             try:
                 self.display_message() # Continuously receive and display message from server
             except (socket.error, ConnectionResetError):
