@@ -178,7 +178,7 @@
     <property name="geometry">
      <rect>
       <x>540</x>
-      <y>240</y>
+      <y>290</y>
       <width>91</width>
       <height>31</height>
      </rect>
@@ -191,13 +191,26 @@
     <property name="geometry">
      <rect>
       <x>630</x>
-      <y>240</y>
+      <y>290</y>
       <width>91</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
      <string>Hash : Verify</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnRSA_2">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>240</y>
+      <width>181</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Diffie Hellman key exchange</string>
     </property>
    </widget>
    <zorder>receivedMessage</zorder>
@@ -210,6 +223,7 @@
    <zorder>btnRSA</zorder>
    <zorder>btnHashHash</zorder>
    <zorder>btnHashVerify</zorder>
+   <zorder>btnRSA_2</zorder>
   </widget>
  </widget>
  <resources/>
