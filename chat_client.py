@@ -2,6 +2,7 @@ import os
 import socket                               # For network communication
 from PySide6.QtWidgets import QApplication, QWidget  # Core PySide6 widgets
 from PySide6.QtUiTools import QUiLoader  
+from PySide6.QtCore import QFile
 import functions.server as server
 
 #Get server configuration from env file
@@ -28,6 +29,21 @@ class ChatClient(QWidget):
         """
         super(ChatClient, self).__init__()  # Initialize parent QWidget class
         loader = QUiLoader()                # Create a QUiLoader instance
+        """"
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        ui_file_path = os.path.join(base_path, 'src/views/ISC_GUI.ui')
+        ui_file = QFile(ui_file_path)
+        if not ui_file.open(QFile.ReadOnly):
+         print(f"Cannot open {ui_file_path}: {ui_file.errorString()}")
+         self.socket = None  # Initialize socket to None explicitly to avoid AttributeError
+         return
+        self.ui = loader.load(ui_file, self)
+        ui_file.close()
+        if not self.ui:
+         print(loader.errorString())
+         self.socket = None  # Again, initialize socket explicitly
+         return
+        """
         self.ui = loader.load('./src/views/ISC_GUI.ui', self)  # Load the UI design from file
         self.setWindowTitle('103.2 - Internet Secured Chat')     # Set window title
         self.ui.btnSend.clicked.connect(lambda: self.send_message())  # Connect button click to send_message method
@@ -125,6 +141,7 @@ class ChatClient(QWidget):
                 print("Connexion interrompue par le serveur.")
                 break
 
+    
     def get_server_message(self):
         """
         Get server message
