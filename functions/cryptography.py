@@ -1,4 +1,5 @@
 import hashlib
+import random
 
 #region Shift encoding
 def encrypt_shift(text, shift):
@@ -78,3 +79,23 @@ def encrypt_rsa(n, e, msg):
 def hash_message(msg):
     hashed = hashlib.sha256(msg.encode()).hexdigest()
     return hashed
+
+def generate_prime_number():
+    """
+    Generate a random prime number between 100 and 1000.
+    """
+    prime = random.randint(100, 1000)
+    while not is_prime(prime):
+        prime = random.randint(100, 1000)
+    return prime
+
+def is_prime(n):
+    """
+    Check if a number is prime.
+    """
+    if n <= 1:
+        return False
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False
+    return True

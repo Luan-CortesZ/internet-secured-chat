@@ -200,7 +200,7 @@
      <string>Hash : Verify</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="btnRSA_2">
+   <widget class="QPushButton" name="btnDH">
     <property name="geometry">
      <rect>
       <x>540</x>
@@ -223,7 +223,7 @@
    <zorder>btnRSA</zorder>
    <zorder>btnHashHash</zorder>
    <zorder>btnHashVerify</zorder>
-   <zorder>btnRSA_2</zorder>
+   <zorder>btnDH</zorder>
   </widget>
  </widget>
  <resources/>
