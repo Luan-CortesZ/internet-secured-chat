@@ -5,7 +5,8 @@ last_sender = ""
 
 def handle_server_task(last_sent_message, server_demand):
     """Traite les messages du serveur nécessitant une action spécifique."""
-    text_to_encode = server_demand[1]
+    if(len(server_demand) != 0) :
+        text_to_encode = server_demand[1]
     task_type = last_sent_message.split()[1]
 
     if task_type == "shift":
