@@ -1,6 +1,8 @@
 from datetime import datetime
 import functions.cryptography as cryptography
 
+last_sender = ""
+
 def handle_server_task(last_sent_message, server_demand):
     """Traite les messages du serveur nécessitant une action spécifique."""
     text_to_encode = server_demand[1]
@@ -43,6 +45,13 @@ def isc_encode(type, message):
         return b"ISC" + type.encode("utf-8") + int(msg_length).to_bytes(2, 'big') + message_bytes
 
 def construct_message_to_show(who, message):
+    global last_sender
+    if((last_sender == "Server" and who == "Server") or last_sender == "You" and who == "You"):
+        return f'''
+        <div><span style="color: gray;">[{message_sending_time()}]</span> {message}</div>
+        '''
+    last_sender = who
+
     return f'''
     <div style="display: flex; align-items: center;">
         <img src="src/img/ISC.png" width="16" height="12" 

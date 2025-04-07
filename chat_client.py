@@ -188,6 +188,7 @@ class ChatClient(QWidget):
         global auto_test
         auto_test = True
         message = "task vigenere encode 10"
+        self.ui.receivedMessage.clear()
         self.send_message("s", message)
 
     def test_rsa_encoder(self):
@@ -195,6 +196,7 @@ class ChatClient(QWidget):
         global auto_test
         auto_test = True
         message = "task RSA encode 10"
+        self.ui.receivedMessage.clear()
         self.send_message("s", message)
 
     def test_hash_hash(self):
@@ -202,6 +204,7 @@ class ChatClient(QWidget):
         global auto_test
         auto_test = True
         message = "task hash hash"
+        self.ui.receivedMessage.clear()
         self.send_message("s", message)
 
     def test_hash_verify(self):
@@ -209,6 +212,7 @@ class ChatClient(QWidget):
         global auto_test
         auto_test = True
         message = "task hash verify"
+        self.ui.receivedMessage.clear()
         self.send_message("s", message)
 
     def closeEvent(self, event):
