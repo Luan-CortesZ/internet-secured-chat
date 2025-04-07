@@ -49,7 +49,7 @@ def construct_message_to_show(who, message):
              style="border-radius: 50%; border: 2px solid black; margin-right: 8px;">
         <b>{who}</b>
     </div>
-    <div>[{message_sending_time()}] {message}</div>
+    <div><span style="color: gray;">[{message_sending_time()}]</span> {message}</div>
     '''
 
 def message_sending_time():
