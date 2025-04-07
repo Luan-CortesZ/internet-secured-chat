@@ -1,7 +1,10 @@
+import math
 import os
+import random
 import socket                               # For network communication
 from PySide6.QtWidgets import QApplication, QWidget  # Core PySide6 widgets
 from PySide6.QtUiTools import QUiLoader  
+from functions import cryptography
 import functions.server as server
 
 #Get server configuration from env file
@@ -36,6 +39,7 @@ class ChatClient(QWidget):
         self.ui.btnRSA.clicked.connect(self.test_rsa_encoder) # Connect RSA button to test RSA encoder
         self.ui.btnHashHash.clicked.connect(self.test_hash_hash) # Connect Hash Hash button to test Hash 
         self.ui.btnHashVerify.clicked.connect(self.test_hash_verify) # Connect Hash Verify button to test Hash verification 
+        self.ui.btnDH.clicked.connect(self.test_diffie_hellman) # Connect DH button to test Diffie-Hellman
         self.ui.userMessage.setText("/") # Set field with '/' by default
         self.ui.userMessage.returnPressed.connect(self.send_message) # User can send message with "ENTER" key
         self.socket = socket.socket()       # Create a new socket object for server communication
@@ -98,7 +102,8 @@ class ChatClient(QWidget):
 
             #Show other user message if type is t and its not my message
             if msg_type == 't' and received_message != last_sent_message:
-                self.ui.receivedMessage.append(server.construct_message_to_show("User", received_message))
+                #self.ui.receivedMessage.append(server.construct_message_to_show("User", received_message))
+                print("")
             #Show image
             elif msg_type == 'i':
                 ""
@@ -140,7 +145,7 @@ class ChatClient(QWidget):
         
         #Get message type (3rd byte) and decode
         msg_type = receivedHeader[3:4].decode()
-
+        
         #Get message length (4th and 5th bytes) and decode
         msg_size = int.from_bytes(receivedHeader[4:6], 'big')
 
@@ -153,18 +158,28 @@ class ChatClient(QWidget):
         #If there is a task to do
         global get_message
         global server_demand # Global so user can update
-        
-        get_message = False
 
-        if("task" in last_sent_message):
-            n_server_message = 2 if last_sent_message.split()[2] == "verify" else 1
-            server_demand.append(received_message) # Add server demand
-            server_demand += self.get_n_server_message(n_server_message)
+        get_message = False
+        myNumber = int(random.randint(2,50))
+
+
+        if("DifHel" in last_sent_message):
+            modulo, generator = cryptography.get_diffie_hellman_prime()
+            sendNumber = int(math.pow(generator, myNumber) % modulo)
+            self.send_message("s", str(modulo) + "," + str(generator)) # send to server
+            server_demand += self.get_n_server_message(2)
+            self.send_message("s", str(sendNumber))
+            exchange_key = cryptography.get_exchange_key(int(server_demand[1]), myNumber, modulo)
+            server_demand += self.get_n_server_message(1)
+            self.send_message("s", str(exchange_key))
+        elif("task" in last_sent_message):
+            if len(last_sent_message.split()) > 2:
+                n_server_message = 2 if last_sent_message.split()[2] == "verify" else 1
+                server_demand.append(received_message) # Add server demand
+                server_demand += self.get_n_server_message(n_server_message)
             encoding_text = server.handle_server_task(last_sent_message, server_demand) #Get encoding text from specific task
             self.send_message("s", encoding_text) # send to server
-
             server_demand.clear() # Clear array so we can encode again
-
         get_message = True
 
     def get_n_server_message(self, n, show=True):
@@ -212,6 +227,13 @@ class ChatClient(QWidget):
         global auto_test
         auto_test = True
         message = "task hash verify"
+        self.ui.receivedMessage.clear()
+        self.send_message("s", message)
+
+    def test_diffie_hellman(self):
+        global auto_test
+        auto_test = True
+        message = "task DifHel"
         self.ui.receivedMessage.clear()
         self.send_message("s", message)
 

@@ -1,5 +1,7 @@
 import hashlib
+import math
 import random
+from sympy import primitive_root
 
 #region Shift encoding
 def encrypt_shift(text, shift):
@@ -80,13 +82,21 @@ def hash_message(msg):
     hashed = hashlib.sha256(msg.encode()).hexdigest()
     return hashed
 
+def get_diffie_hellman_prime():
+    modulo = generate_prime_number()
+    generator = primitive_root(modulo)
+    return modulo, generator
+
+def get_exchange_key(G, a, p):
+    return pow(G,a,p)
+
 def generate_prime_number():
     """
     Generate a random prime number between 100 and 1000.
     """
-    prime = random.randint(100, 1000)
+    prime = random.randint(2, 4999)
     while not is_prime(prime):
-        prime = random.randint(100, 1000)
+        prime = random.randint(2, 4999)
     return prime
 
 def is_prime(n):
