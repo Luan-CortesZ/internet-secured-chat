@@ -52,7 +52,7 @@ def construct_message_to_show(who, message):
         <div><span style="color: gray;">[{message_sending_time()}]</span> {message}</div>
         '''
     last_sender = who
-
+    
     return f'''
     <div style="display: flex; align-items: center;">
         <img src="src/img/ISC.png" width="16" height="12" 

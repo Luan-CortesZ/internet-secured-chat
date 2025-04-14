@@ -5,7 +5,7 @@ import socket                               # For network communication
 from PySide6.QtWidgets import QApplication, QWidget  # Core PySide6 widgets
 from PySide6.QtUiTools import QUiLoader  
 from functions import cryptography
-from PySide6.QtCore import QFile
+from PySide6.QtCore import QFile, Signal, QTimer
 import functions.server as server
 
 #Get server configuration from env file
@@ -21,7 +21,7 @@ class ChatClient(QWidget):
     A PySide6-based chat client that connects to a server and allows
     sending/receiving messages through a graphical interface.
     """
-
+    message_received = Signal(str)  # Signal pour afficher un message reçu dans l'UI
     def __init__(self, host=HOST, port=PORT):
         """
         Initialize the chat client with server connection details.
@@ -47,6 +47,7 @@ class ChatClient(QWidget):
          self.socket = None  # Again, initialize socket explicitly
          return
         """
+        self.message_received.connect(self.display_in_ui)  # Connecte le signal au slot
         self.ui = loader.load('./src/views/ISC_GUI.ui', self)  # Load the UI design from file
         self.setWindowTitle('103.2 - Internet Secured Chat')     # Set window title
         self.ui.btnSend.clicked.connect(lambda: self.send_message())  # Connect button click to send_message method
@@ -60,6 +61,9 @@ class ChatClient(QWidget):
         self.ui.userMessage.returnPressed.connect(self.send_message) # User can send message with "ENTER" key
         self.socket = socket.socket()       # Create a new socket object for server communication
         self.connect_to_server(host, port)  # Establish connection to the server
+
+    def display_in_ui(self, text):
+        self.ui.receivedMessage.append(text)  # Cela s'exécute dans le thread UI
 
     def connect_to_server(self, host, port):
         """
@@ -95,7 +99,7 @@ class ChatClient(QWidget):
         #If message is a string, return message
         #if not, so message is bytearray(), read byte by byte and decode message, replace empty byte by ''
         text_to_show = message if isinstance(message, str) else bytes(byte for byte in message if byte != 0).decode('utf-8', 'replace')
-        self.ui.receivedMessage.append(server.construct_message_to_show("You", text_to_show))  # Display user's message in the chat area
+        self.message_received.emit(server.construct_message_to_show("You", text_to_show))  # Display user's message in the chat area
 
         #Send message to server
         self.socket.sendall(server.isc_encode(type, message))
@@ -118,14 +122,13 @@ class ChatClient(QWidget):
 
             #Show other user message if type is t and its not my message
             if msg_type == 't' and received_message != last_sent_message:
-                #self.ui.receivedMessage.append(server.construct_message_to_show("User", received_message))
-                print("")
+                self.message_received.emit(server.construct_message_to_show("User", received_message))
             #Show image
             elif msg_type == 'i':
                 ""
             #Show server message if type is 's' and make specific task
             elif msg_type == 's':
-                self.ui.receivedMessage.append(server.construct_message_to_show("Server", received_message))
+                self.message_received.emit(server.construct_message_to_show("Server", received_message))
                 if auto_test: 
                     self.test_server_demand(received_message)
                     auto_test = False
@@ -145,7 +148,6 @@ class ChatClient(QWidget):
             except (socket.error, ConnectionResetError):
                 print("Connexion interrompue par le serveur.")
                 break
-
     
     def get_server_message(self):
         """
@@ -179,7 +181,6 @@ class ChatClient(QWidget):
         get_message = False
         myNumber = int(random.randint(2,50))
 
-
         if("DifHel" in last_sent_message):
             modulo, generator = cryptography.get_diffie_hellman_prime()
             sendNumber = int(pow(generator, myNumber, modulo))
@@ -205,7 +206,7 @@ class ChatClient(QWidget):
             raw_message, msg_type = self.get_server_message() # Get server message and type of message
             received_message = server.decode_server_message(raw_message) # decode message to make it readable
             demand.append(received_message)# Add server demand
-            if show: self.ui.receivedMessage.append(server.construct_message_to_show("Server", received_message))
+            if show: self.message_received.emit(server.construct_message_to_show("Server", received_message))
         return demand
 
     def test_shift_encoder(self):
@@ -213,6 +214,7 @@ class ChatClient(QWidget):
         global auto_test
         auto_test = True
         message = "task shift encode 10"
+        QTimer.singleShot(0, self.ui.receivedMessage.clear)
         self.send_message("s", message)
 
     def test_vigenere_encoder(self):
@@ -220,7 +222,7 @@ class ChatClient(QWidget):
         global auto_test
         auto_test = True
         message = "task vigenere encode 10"
-        self.ui.receivedMessage.clear()
+        QTimer.singleShot(0, self.ui.receivedMessage.clear)
         self.send_message("s", message)
 
     def test_rsa_encoder(self):
@@ -228,7 +230,7 @@ class ChatClient(QWidget):
         global auto_test
         auto_test = True
         message = "task RSA encode 10"
-        self.ui.receivedMessage.clear()
+        QTimer.singleShot(0, self.ui.receivedMessage.clear)
         self.send_message("s", message)
 
     def test_hash_hash(self):
@@ -236,7 +238,7 @@ class ChatClient(QWidget):
         global auto_test
         auto_test = True
         message = "task hash hash"
-        self.ui.receivedMessage.clear()
+        QTimer.singleShot(0, self.ui.receivedMessage.clear)
         self.send_message("s", message)
 
     def test_hash_verify(self):
@@ -244,14 +246,14 @@ class ChatClient(QWidget):
         global auto_test
         auto_test = True
         message = "task hash verify"
-        self.ui.receivedMessage.clear()
+        QTimer.singleShot(0, self.ui.receivedMessage.clear)
         self.send_message("s", message)
 
     def test_diffie_hellman(self):
         global auto_test
         auto_test = True
         message = "task DifHel"
-        self.ui.receivedMessage.clear()
+        QTimer.singleShot(0, self.ui.receivedMessage.clear)
         self.send_message("s", message)
 
     def closeEvent(self, event):
