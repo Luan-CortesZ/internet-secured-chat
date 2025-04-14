@@ -182,7 +182,7 @@ class ChatClient(QWidget):
 
         if("DifHel" in last_sent_message):
             modulo, generator = cryptography.get_diffie_hellman_prime()
-            sendNumber = int(math.pow(generator, myNumber) % modulo)
+            sendNumber = int(pow(generator, myNumber, modulo))
             self.send_message("s", str(modulo) + "," + str(generator)) # send to server
             server_demand += self.get_n_server_message(2)
             self.send_message("s", str(sendNumber))
