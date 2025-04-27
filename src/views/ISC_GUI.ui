@@ -213,16 +213,6 @@
      <string>Diffie Hellman key exchange</string>
     </property>
    </widget>
-   <widget class="QTextBrowser" name="textBrowser">
-    <property name="geometry">
-     <rect>
-      <x>150</x>
-      <y>180</y>
-      <width>256</width>
-      <height>192</height>
-     </rect>
-    </property>
-   </widget>
    <zorder>receivedMessage</zorder>
    <zorder>ISC_image</zorder>
    <zorder>lbl_title</zorder>
@@ -234,7 +224,6 @@
    <zorder>btnHashHash</zorder>
    <zorder>btnHashVerify</zorder>
    <zorder>btnDH</zorder>
-   <zorder>textBrowser</zorder>
   </widget>
  </widget>
  <resources/>

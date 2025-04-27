@@ -14,4 +14,4 @@ def main():
     sys.exit(app.exec())          # Start the application event loop
 
 if __name__ == "__main__":
-    main()  # Run the main function when script is executed directly
+    main()  # Run the main function when script is executed directlyso

@@ -4,8 +4,17 @@ import functions.cryptography as cryptography
 last_sender = ""
 
 def handle_server_task(last_sent_message, server_demand):
-    """Traite les messages du serveur nécessitant une action spécifique."""
-    if(len(server_demand) != 0) :
+    """
+    Processes server messages that require a specific action.
+    
+    Parameters:
+    last_sent_message -- the last message sent to the server
+    server_demand -- the server's response that may require encryption/hashing
+
+    Returns:
+    The result of the processed task (encrypted or hashed message).
+    """
+    if(len(server_demand) != 0):
         text_to_encode = server_demand[1]
     task_type = last_sent_message.split()[1]
 
@@ -30,11 +39,20 @@ def handle_server_task(last_sent_message, server_demand):
     return encoding_text
 
 def isc_encode(type, message):
-    if message:
+    """
+    Encodes a message using the ISC protocol format.
 
+    Parameters:
+    type -- the type of the message (e.g., 'TEX', 'IMG', etc.)
+    message -- the message content (str or bytes)
+
+    Returns:
+    A bytes object following the ISC protocol structure.
+    """
+    if message:
         message_bytes = bytearray()
-        if(isinstance(message, str)):
-            #Add each message character encoded in 4 bytes
+        if isinstance(message, str):
+            # Add each character encoded in 4 bytes
             for char in message:
                 encoded = char.encode('utf-8')
                 message_bytes += (4 - len(encoded)) * b'\x00' + encoded
@@ -46,8 +64,18 @@ def isc_encode(type, message):
         return b"ISC" + type.encode("utf-8") + int(msg_length).to_bytes(2, 'big') + message_bytes
 
 def construct_message_to_show(who, message):
+    """
+    Builds the HTML representation of a chat message.
+
+    Parameters:
+    who -- the sender of the message ('Server' or 'You')
+    message -- the message content
+
+    Returns:
+    A formatted HTML string ready to display in the chat.
+    """
     global last_sender
-    if((last_sender == "Server" and who == "Server") or last_sender == "You" and who == "You"):
+    if ((last_sender == "Server" and who == "Server") or (last_sender == "You" and who == "You")):
         return f'''
         <div><span style="color: gray;">[{message_sending_time()}]</span> {message}</div>
         '''
@@ -64,35 +92,50 @@ def construct_message_to_show(who, message):
 
 def message_sending_time():
     """
-    Retourne l'heure et la minute actuelles sous le format 'HH:MM'.
+    Returns the current time in 'HH:MM' format.
     """
     return datetime.now().strftime("%H:%M")
 
 def get_server_shift(server_shift):
     """
-    Get server shift sent 
+    Extracts the shift key from a server shift message.
+
+    Parameters:
+    server_shift -- the server's shift-key formatted string
+
+    Returns:
+    The extracted shift key as a string.
     """
     shift = server_shift.split("shift-key ")[1]
     return shift
 
 def get_server_rsa_infos(server_rsa):
     """
-    Get server rsa informations
+    Extracts RSA information (n and e) from the server's RSA message.
 
-    return n and e
+    Parameters:
+    server_rsa -- the server's RSA info string
+
+    Returns:
+    A tuple (e, n) containing the RSA public exponent and modulus.
     """
     infos = server_rsa.split(", e=")
     e = int(infos[1])
     n = int(infos[0].split("n=")[1])
-    return (e,n)
+    return (e, n)
 
 def decode_server_message(raw_message):
     """
-    Decode server message set in parameter
+    Decodes a server message received as raw bytes.
+
+    Parameters:
+    raw_message -- the raw bytes message from the server
+
+    Returns:
+    A decoded string after removing padding.
     """
-    #Decode message
     received_message = ""
     for i in range(0, len(raw_message), 4):
-        char_data = raw_message[i:i+4] #Read char by char
-        received_message += char_data.decode("utf-8", errors="ignore").strip('\x00') #Delete empty char
+        char_data = raw_message[i:i+4]  # Read 4 bytes at a time
+        received_message += char_data.decode("utf-8", errors="ignore").strip('\x00')  # Remove padding
     return received_message
