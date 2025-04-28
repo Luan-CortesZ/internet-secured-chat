@@ -52,7 +52,7 @@ def encrypt_vigenere(msg, key):
 
     for i, char in enumerate(msg):
         iChar = int.from_bytes(char.encode())
-        iKey = int.from_bytes(key[i % len(key)].encode())
+        iKey = int.from_bytes(key[i].encode())
         
         result.extend(int.to_bytes((iChar + iKey), 4))
 
